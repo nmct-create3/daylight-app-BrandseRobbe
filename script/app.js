@@ -16,28 +16,46 @@ const _parseMillisecondsIntoReadableTime = function(timestamp) {
 // 5 TODO: maak updateSun functie
 
 // 4 Zet de zon op de juiste plaats en zorg ervoor dat dit iedere minuut gebeurt.
-let placeSunAndStartMoving = (totalMinutes, sunrise) => {
-  // In de functie moeten we eerst wat zaken ophalen en berekenen.
-  // Haal het DOM element van onze zon op en van onze aantal minuten resterend deze dag.
-  // Bepaal het aantal minuten dat de zon al op is.
-  // Nu zetten we de zon op de initiële goede positie ( met de functie updateSun ). Bereken hiervoor hoeveel procent er van de totale zon-tijd al voorbij is.
-  // We voegen ook de 'is-loaded' class toe aan de body-tag.
-  // Vergeet niet om het resterende aantal minuten in te vullen.
-  // Nu maken we een functie die de zon elke minuut zal updaten
-  // Bekijk of de zon niet nog onder of reeds onder is
-  // Anders kunnen we huidige waarden evalueren en de zon updaten via de updateSun functie.
-  // PS.: vergeet weer niet om het resterend aantal minuten te updaten en verhoog het aantal verstreken minuten.
+const placeSunAndStartMoving = function(totalMinutes, rest) {
+  let percentage_left = 100 - (rest / totalMinutes) * 100;
+  let percentage_bottom = 100 - (rest / totalMinutes) * 100;
+  if (percentage_left < 50) {
+    percentage_bottom = (rest / totalMinutes) * 100;
+  }
+
+  let tijd = new Date(Date.now());
+
+  console.log(percentage_left, 'left');
+  console.log(percentage_bottom, 'bottom');
+  let style = `bottom: ${percentage_bottom}%; left: ${percentage_left}%;">`;
+  document.querySelector('.js-sun').setAttribute('style', style);
+
+  let notatie = tijd.toLocaleTimeString('be', { hour: '2-digit', minute: '2-digit' });
+  console.log(notatie);
+  document.querySelector('.js-sun').setAttribute('data-time', notatie);
 };
 
 // 3 Met de data van de API kunnen we de app opvullen
 const showResult = function(response) {
-  // We gaan eerst een paar onderdelen opvullen
-  // Hier gaan we een functie oproepen die de zon een bepaalde positie kan geven en dit kan updaten.
-  // Geef deze functie de periode tussen sunrise en sunset mee en het tijdstip van sunrise.
   console.log(response);
   document.querySelector('.js-location').innerHTML = `${response.city.name}, ${response.city.country}`;
   document.querySelector('.js-sunrise').innerHTML = _parseMillisecondsIntoReadableTime(response.city.sunrise);
   document.querySelector('.js-sunset').innerHTML = _parseMillisecondsIntoReadableTime(response.city.sunset);
+
+  let huidige_tijd = new Date(Date.now());
+  let date = new Date(response.city.sunset * 1000);
+  let date2 = new Date(response.city.sunrise * 1000);
+
+  let date_notatie = date.toLocaleTimeString('be', { hour: '2-digit', minute: '2-digit' });
+  console.log(date_notatie, 'sunset');
+
+  let restingmin = huidige_tijd.getHours() * 60 + huidige_tijd.getMinutes() - date2.getHours() * 60 + date2.getMinutes();
+  console.log(restingmin, 'resterende min');
+  let total_min = date.getHours() * 60 + date.getMinutes() - date2.getHours() * 60 + date2.getMinutes();
+  console.log(total_min, 'totaal aantal min in dag');
+  rest = total_min - restingmin;
+  placeSunAndStartMoving(total_min, rest);
+  document.querySelector('.js-time-left').innerHTML = rest;
 };
 
 // 2 Aan de hand van een longitude en latitude gaan we de yahoo wheater API ophalen.
@@ -55,4 +73,5 @@ const getAPI = async function(lat, lon) {
 document.addEventListener('DOMContentLoaded', function() {
   // 1 We will query the API with longitude and latitude.
   getAPI(50.8027841, 3.2097454);
+  // setInterval(getAPI(50.8027841, 3.2097454), 60000);
 });
